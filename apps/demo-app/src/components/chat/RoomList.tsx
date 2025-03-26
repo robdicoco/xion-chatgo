@@ -3,25 +3,27 @@
 import React, { useState } from 'react';
 import { useChatContext } from '../../contexts/ChatContext';
 import { useAbstraxionAccount } from '@burnt-labs/abstraxion';
+import LoadingSpinner from './LoadingSpinner';
 
 export default function RoomList() {
-    const { rooms, currentRoom, joinRoom, createRoom } = useChatContext();
+    const { rooms, currentRoom, joinRoom, createRoom, isLoading } = useChatContext();
     const { data: account } = useAbstraxionAccount();
     const [isCreating, setIsCreating] = useState(false);
-    const [newParticipantId, setNewParticipantId] = useState('');
+    const [newParticipant, setNewParticipant] = useState('');
 
     const handleCreateRoom = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newParticipantId.trim() || !account?.bech32Address) return;
+        if (!newParticipant.trim() || isLoading) return;
 
         try {
-            const roomId = await createRoom([newParticipantId.trim()]);
+            setIsCreating(true);
+            const roomId = await createRoom([newParticipant.trim()]);
             joinRoom(roomId);
-            setIsCreating(false);
-            setNewParticipantId('');
+            setNewParticipant('');
         } catch (error) {
-            console.error('Error creating room:', error);
-            // You might want to show an error toast here
+            // Error is handled by ChatContext
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -29,78 +31,72 @@ export default function RoomList() {
         <div className="h-full flex flex-col">
             {/* Header */}
             <div className="p-4 border-b border-gray-200">
-                <button
-                    onClick={() => setIsCreating(true)}
-                    className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                    New Chat
-                </button>
+                <h2 className="text-lg font-semibold mb-2">Chat Rooms</h2>
+                <form onSubmit={handleCreateRoom}>
+                    <input
+                        type="text"
+                        value={newParticipant}
+                        onChange={(e) => setNewParticipant(e.target.value)}
+                        placeholder="Enter participant address..."
+                        className="w-full px-3 py-2 border rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={isLoading || isCreating}
+                    />
+                    <button
+                        type="submit"
+                        disabled={!newParticipant.trim() || isLoading || isCreating}
+                        className={`w-full px-4 py-2 rounded-lg ${
+                            newParticipant.trim() && !isLoading && !isCreating
+                                ? 'bg-blue-500 text-white hover:bg-blue-600'
+                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        }`}
+                    >
+                        {isCreating ? <LoadingSpinner /> : 'Create Room'}
+                    </button>
+                </form>
             </div>
-
-            {/* Create Room Form */}
-            {isCreating && (
-                <div className="p-4 border-b border-gray-200">
-                    <form onSubmit={handleCreateRoom} className="flex flex-col gap-2">
-                        <input
-                            type="text"
-                            value={newParticipantId}
-                            onChange={(e) => setNewParticipantId(e.target.value)}
-                            placeholder="Enter participant ID..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                        />
-                        <div className="flex gap-2">
-                            <button
-                                type="submit"
-                                disabled={!newParticipantId.trim()}
-                                className="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-                            >
-                                Create
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setIsCreating(false);
-                                    setNewParticipantId('');
-                                }}
-                                className="flex-1 px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
-
             {/* Room List */}
-            <div className="flex-1 overflow-y-auto">
-                {rooms.map((room) => {
-                    const otherParticipant = room.participants.find(
-                        (p) => p !== account?.bech32Address
-                    );
-                    
-                    return (
-                        <button
-                            key={room.id}
-                            onClick={() => joinRoom(room.id)}
-                            className={`w-full p-4 text-left hover:bg-gray-50 ${
-                                currentRoom === room.id ? 'bg-blue-50' : ''
-                            }`}
-                        >
-                            <div className="font-medium truncate">
-                                {otherParticipant ? (
-                                    <span className="text-sm">
-                                        {otherParticipant.slice(0, 12)}...
-                                    </span>
-                                ) : (
-                                    <span className="text-gray-500">No participant</span>
-                                )}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                                Created {new Date(room.createdAt).toLocaleDateString()}
-                            </div>
-                        </button>
-                    );
-                })}
+            <div className="flex-1 overflow-y-auto p-2">
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-full">
+                        <LoadingSpinner />
+                    </div>
+                ) : rooms.length === 0 ? (
+                    <div className="text-center text-gray-500 mt-4">
+                        No chat rooms yet
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {rooms.map((room) => {
+                            const otherParticipant = room.participants.find(
+                                (p) => p !== account?.bech32Address
+                            );
+                            return (
+                                <button
+                                    key={room.id}
+                                    onClick={() => joinRoom(room.id)}
+                                    className={`w-full p-3 text-left rounded-lg transition-colors ${
+                                        currentRoom === room.id
+                                            ? 'bg-blue-50 text-blue-700'
+                                            : 'hover:bg-gray-50'
+                                    }`}
+                                >
+                                    <div className="font-medium">
+                                        {otherParticipant ? (
+                                            <span>
+                                                {otherParticipant.slice(0, 12)}...
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-500">No participant</span>
+                                        )}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                        Created {new Date(room.createdAt).toLocaleDateString()}
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     );
