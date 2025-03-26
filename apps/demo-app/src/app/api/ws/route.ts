@@ -2,7 +2,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { ChatOperations } from '../../../lib/db/operations';
 import { Message } from '../../../lib/types/chat';
 
-const wss = new WebSocketServer({ port: parseInt(process.env.NEXT_PUBLIC_WS_PORT || '3001') });
+const wss = new WebSocketServer({ port: parseInt(process.env.NEXT_PUBLIC_WS_PORT || '3002') });
 
 const clients = new Map<string, WebSocket>();
 const roomSubscriptions = new Map<string, Set<string>>();

@@ -2,6 +2,7 @@ import sqlite3 from 'sqlite3';
 import { Database } from 'sqlite3';
 import path from 'path';
 
+// This file should only be used on the server side
 const DB_PATH = path.join(process.cwd(), 'chat.db');
 
 class DatabaseConnection {
@@ -58,18 +59,6 @@ class DatabaseConnection {
                 )
             `);
         });
-    }
-
-    public static closeConnection(): void {
-        if (DatabaseConnection.instance) {
-            DatabaseConnection.instance.close((err) => {
-                if (err) {
-                    console.error('Error closing database:', err);
-                } else {
-                    console.log('Database connection closed');
-                }
-            });
-        }
     }
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useChatContext } from '../../contexts/ChatContext';
 import { useAbstraxionAccount } from '@burnt-labs/abstraxion';
 import LoadingSpinner from './LoadingSpinner';
@@ -18,7 +18,7 @@ export default function RoomList() {
         try {
             setIsCreating(true);
             const roomId = await createRoom([newParticipant.trim()]);
-            joinRoom(roomId);
+            await joinRoom(roomId);
             setNewParticipant('');
         } catch (error) {
             // Error is handled by ChatContext
@@ -26,6 +26,12 @@ export default function RoomList() {
             setIsCreating(false);
         }
     };
+
+    // Reset form state when user changes
+    useEffect(() => {
+        setNewParticipant('');
+        setIsCreating(false);
+    }, [account?.bech32Address]);
 
     return (
         <div className="h-full flex flex-col">
@@ -52,29 +58,29 @@ export default function RoomList() {
                     </button>
                 </form>
             </div>
-            <div className="flex-1 overflow-y-auto p-2">
+
+            <div className="flex-1 overflow-y-auto">
                 {isLoading ? (
-                    <div className="flex justify-center items-center h-full">
+                    <div className="flex items-center justify-center h-full">
                         <LoadingSpinner />
                     </div>
-                ) : rooms.length === 0 ? (
-                    <div className="text-center text-gray-500 mt-4">
-                        No chat rooms yet
-                    </div>
                 ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2 p-2">
                         {rooms.map((room) => (
                             <button
                                 key={room.id}
                                 onClick={() => joinRoom(room.id)}
-                                className={`w-full p-3 text-left rounded-lg transition-colors ${currentRoom === room.id
-                                        ? 'bg-blue-50 text-blue-700'
-                                        : 'hover:bg-gray-50'
-                                    }`}
+                                className={`w-full p-3 rounded-lg ${
+                                    room.id === currentRoom
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-100 hover:bg-gray-200'
+                                }`}
                             >
-                                <div className="font-medium">Room {room.id.slice(0, 8)}</div>
-                                <div className="text-sm text-gray-500">
-                                    {new Date(room.createdAt).toLocaleDateString()}
+                                <div className="flex items-center justify-between">
+                                    <span className="font-medium">Room {room.id}</span>
+                                    <span className="text-sm text-gray-500">
+                                        {new Date(room.createdAt).toLocaleDateString()}
+                                    </span>
                                 </div>
                             </button>
                         ))}

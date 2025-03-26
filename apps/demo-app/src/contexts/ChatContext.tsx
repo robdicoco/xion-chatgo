@@ -66,11 +66,13 @@ export function ChatProvider({ children, userId }: { children: React.ReactNode; 
                 switch (event.type) {
                     case 'MESSAGE':
                         if ((event.payload as Message).roomId === state.currentRoom) {
-                            dispatch({ type: 'ADD_MESSAGE', payload: event.payload as Message });
+                            // Queue message updates to avoid state updates during render
+                            const newMessages = [...state.messages, event.payload as Message];
+                            dispatch({ type: 'SET_MESSAGES', payload: newMessages });
                         }
                         break;
                     case 'ROOM_UPDATE':
-                        // Refresh rooms list when a room is updated
+                        // Queue room updates to avoid state updates during render
                         ChatOperations.getUserRooms(userId).then(rooms => {
                             dispatch({ type: 'SET_ROOMS', payload: rooms });
                         });
@@ -102,14 +104,14 @@ export function ChatProvider({ children, userId }: { children: React.ReactNode; 
                 dispatch({ type: 'SET_LOADING', payload: false });
             }
         };
+
         loadRooms();
     }, [userId]);
 
-    // Load messages when current room changes
+    // Load messages for current room
     useEffect(() => {
         const loadMessages = async () => {
             if (state.currentRoom) {
-                dispatch({ type: 'SET_LOADING', payload: true });
                 try {
                     const messages = await ChatOperations.getRoomMessages(state.currentRoom);
                     dispatch({ type: 'SET_MESSAGES', payload: messages });
@@ -119,11 +121,12 @@ export function ChatProvider({ children, userId }: { children: React.ReactNode; 
                         type: 'SET_ERROR', 
                         payload: 'Failed to load messages. Please try again later.' 
                     });
-                } finally {
-                    dispatch({ type: 'SET_LOADING', payload: false });
                 }
+            } else {
+                dispatch({ type: 'SET_MESSAGES', payload: [] });
             }
         };
+
         loadMessages();
     }, [state.currentRoom]);
 

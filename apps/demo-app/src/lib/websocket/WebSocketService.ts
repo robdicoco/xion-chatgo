@@ -46,7 +46,7 @@ class WebSocketService {
 
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = window.location.hostname;
-        const port = process.env.NEXT_PUBLIC_WS_PORT || '3001';
+        const port = process.env.NEXT_PUBLIC_WS_PORT || '3002';
         
         this.ws = new WebSocket(`${protocol}//${host}:${port}/ws?userId=${userId}`);
 
