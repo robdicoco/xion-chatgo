@@ -1,8 +1,9 @@
 "use client";
 import "./globals.css";
 import { Inter } from "next/font/google";
-import { AbstraxionProvider } from "@burnt-labs/abstraxion";
+import { AbstraxionProvider, useAbstraxionAccount } from "@burnt-labs/abstraxion";
 import "@burnt-labs/abstraxion/dist/index.css";
+import { ChatProvider } from "../contexts/ChatContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,6 +40,21 @@ const treasuryConfig = {
   // restUrl: "https://api.xion-mainnet-1.burnt.com:443",
 };
 
+// Wrapper component to access user account
+function ChatProviderWrapper({ children }: { children: React.ReactNode }) {
+  const { data: account, isConnected } = useAbstraxionAccount();
+  
+  if (!isConnected || !account?.bech32Address) {
+    return children;
+  }
+
+  return (
+    <ChatProvider userId={account.bech32Address}>
+      {children}
+    </ChatProvider>
+  );
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -48,7 +64,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AbstraxionProvider config={treasuryConfig}>
-          {children}
+          <ChatProviderWrapper>
+            {children}
+          </ChatProviderWrapper>
         </AbstraxionProvider>
       </body>
     </html>

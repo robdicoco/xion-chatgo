@@ -22,10 +22,12 @@
     "@cosmjs/cosmwasm-stargate": "^0.32.4",
     "@cosmjs/crypto": "^0.32.4",
     "@heroicons/react": "^2.1.4",
+    "@types/sqlite3": "^5.1.0",
     "cosmjs-types": "^0.9.0",
     "next": "^14.0.3",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@burnt-labs/eslint-config-custom": "workspace:*",
