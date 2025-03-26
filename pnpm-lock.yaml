@@ -66,6 +66,9 @@ importers:
       '@types/sqlite3':
         specifier: ^5.1.0
         version: 5.1.0
+      '@types/ws':
+        specifier: ^8.5.10
+        version: 8.18.0
       cosmjs-types:
         specifier: ^0.9.0
         version: 0.9.0
@@ -81,6 +84,9 @@ importers:
       sqlite3:
         specifier: ^5.1.7
         version: 5.1.7
+      ws:
+        specifier: ^8.16.0
+        version: 8.18.1
     devDependencies:
       '@burnt-labs/eslint-config-custom':
         specifier: workspace:*
@@ -7230,6 +7236,12 @@ packages:
   /@types/uuid@9.0.8:
     resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
     dev: true
+
+  /@types/ws@8.18.0:
+    resolution: {integrity: sha512-8svvI3hMyvN0kKCJMvTJP/x6Y/EoQbepff882wL+Sn5QsXb3etnamgrJq4isrBxSJj5L2AuXcI0+bgkoAXGUJw==}
+    dependencies:
+      '@types/node': 20.17.24
+    dev: false
 
   /@types/yargs-parser@21.0.3:
     resolution: {integrity: sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ==}

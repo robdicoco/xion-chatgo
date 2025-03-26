@@ -13,7 +13,7 @@ export default function RoomList() {
 
     const handleCreateRoom = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newParticipant.trim() || isLoading) return;
+        if (!newParticipant.trim() || isLoading || !account?.bech32Address) return;
 
         try {
             setIsCreating(true);
@@ -29,7 +29,6 @@ export default function RoomList() {
 
     return (
         <div className="h-full flex flex-col">
-            {/* Header */}
             <div className="p-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold mb-2">Chat Rooms</h2>
                 <form onSubmit={handleCreateRoom}>
@@ -39,22 +38,20 @@ export default function RoomList() {
                         onChange={(e) => setNewParticipant(e.target.value)}
                         placeholder="Enter participant address..."
                         className="w-full px-3 py-2 border rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        disabled={isLoading || isCreating}
+                        disabled={isLoading || isCreating || !account?.bech32Address}
                     />
                     <button
                         type="submit"
-                        disabled={!newParticipant.trim() || isLoading || isCreating}
-                        className={`w-full px-4 py-2 rounded-lg ${
-                            newParticipant.trim() && !isLoading && !isCreating
+                        disabled={!newParticipant.trim() || isLoading || isCreating || !account?.bech32Address}
+                        className={`w-full px-4 py-2 rounded-lg ${newParticipant.trim() && !isLoading && !isCreating && account?.bech32Address
                                 ? 'bg-blue-500 text-white hover:bg-blue-600'
                                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        }`}
+                            }`}
                     >
                         {isCreating ? <LoadingSpinner /> : 'Create Room'}
                     </button>
                 </form>
             </div>
-            {/* Room List */}
             <div className="flex-1 overflow-y-auto p-2">
                 {isLoading ? (
                     <div className="flex justify-center items-center h-full">
@@ -66,35 +63,21 @@ export default function RoomList() {
                     </div>
                 ) : (
                     <div className="space-y-2">
-                        {rooms.map((room) => {
-                            const otherParticipant = room.participants.find(
-                                (p) => p !== account?.bech32Address
-                            );
-                            return (
-                                <button
-                                    key={room.id}
-                                    onClick={() => joinRoom(room.id)}
-                                    className={`w-full p-3 text-left rounded-lg transition-colors ${
-                                        currentRoom === room.id
-                                            ? 'bg-blue-50 text-blue-700'
-                                            : 'hover:bg-gray-50'
+                        {rooms.map((room) => (
+                            <button
+                                key={room.id}
+                                onClick={() => joinRoom(room.id)}
+                                className={`w-full p-3 text-left rounded-lg transition-colors ${currentRoom === room.id
+                                        ? 'bg-blue-50 text-blue-700'
+                                        : 'hover:bg-gray-50'
                                     }`}
-                                >
-                                    <div className="font-medium">
-                                        {otherParticipant ? (
-                                            <span>
-                                                {otherParticipant.slice(0, 12)}...
-                                            </span>
-                                        ) : (
-                                            <span className="text-gray-500">No participant</span>
-                                        )}
-                                    </div>
-                                    <div className="text-sm text-gray-500">
-                                        Created {new Date(room.createdAt).toLocaleDateString()}
-                                    </div>
-                                </button>
-                            );
-                        })}
+                            >
+                                <div className="font-medium">Room {room.id.slice(0, 8)}</div>
+                                <div className="text-sm text-gray-500">
+                                    {new Date(room.createdAt).toLocaleDateString()}
+                                </div>
+                            </button>
+                        ))}
                     </div>
                 )}
             </div>

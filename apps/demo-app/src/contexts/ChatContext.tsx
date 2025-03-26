@@ -1,8 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
-import { ChatContextType, Message, ChatRoom } from '../lib/types/chat';
+import { ChatContextType, Message, ChatRoom, WebSocketMessage, WSMessagePayload, WSRoomPayload } from '../lib/types/chat';
 import { ChatOperations } from '../lib/db/operations';
+import { webSocketService } from '../lib/websocket/WebSocketService';
 
 // Initial state
 const initialState: Omit<ChatContextType, 'sendMessage' | 'createRoom' | 'joinRoom' | 'leaveRoom'> & {
@@ -55,6 +56,35 @@ const ChatContext = createContext<(ChatContextType & {
 export function ChatProvider({ children, userId }: { children: React.ReactNode; userId: string }) {
     const [state, dispatch] = useReducer(chatReducer, initialState);
 
+    // Initialize WebSocket connection
+    useEffect(() => {
+        if (userId) {
+            webSocketService.connect(userId);
+
+            // Subscribe to WebSocket events
+            const unsubscribe = webSocketService.subscribe((event: WebSocketMessage) => {
+                switch (event.type) {
+                    case 'MESSAGE':
+                        if ((event.payload as Message).roomId === state.currentRoom) {
+                            dispatch({ type: 'ADD_MESSAGE', payload: event.payload as Message });
+                        }
+                        break;
+                    case 'ROOM_UPDATE':
+                        // Refresh rooms list when a room is updated
+                        ChatOperations.getUserRooms(userId).then(rooms => {
+                            dispatch({ type: 'SET_ROOMS', payload: rooms });
+                        });
+                        break;
+                }
+            });
+
+            return () => {
+                unsubscribe();
+                webSocketService.disconnect();
+            };
+        }
+    }, [userId]);
+
     // Load user's rooms
     useEffect(() => {
         const loadRooms = async () => {
@@ -97,15 +127,23 @@ export function ChatProvider({ children, userId }: { children: React.ReactNode; 
         loadMessages();
     }, [state.currentRoom]);
 
-    // Send message with loading state
+    // Send message with loading state and WebSocket
     const sendMessage = useCallback(async (content: string) => {
         if (!state.currentRoom) {
             throw new Error('No room selected');
         }
+
         dispatch({ type: 'SET_LOADING', payload: true });
         try {
-            const message = await ChatOperations.createMessage(userId, content, state.currentRoom);
-            dispatch({ type: 'ADD_MESSAGE', payload: message });
+            const messagePayload: WSMessagePayload = {
+                senderId: userId,
+                content,
+                roomId: state.currentRoom
+            };
+            webSocketService.sendMessage({
+                type: 'MESSAGE',
+                payload: messagePayload
+            });
         } catch (error) {
             console.error('Error sending message:', error);
             dispatch({ 
@@ -146,17 +184,33 @@ export function ChatProvider({ children, userId }: { children: React.ReactNode; 
         }
     }, [userId]);
 
+    const joinRoom = useCallback((roomId: string) => {
+        dispatch({ type: 'SET_CURRENT_ROOM', payload: roomId });
+        const roomPayload: WSRoomPayload = { roomId };
+        webSocketService.sendMessage({
+            type: 'JOIN_ROOM',
+            payload: roomPayload
+        });
+    }, []);
+
+    const leaveRoom = useCallback(() => {
+        if (state.currentRoom) {
+            const roomPayload: WSRoomPayload = { roomId: state.currentRoom };
+            webSocketService.sendMessage({
+                type: 'LEAVE_ROOM',
+                payload: roomPayload
+            });
+        }
+        dispatch({ type: 'SET_CURRENT_ROOM', payload: null });
+        dispatch({ type: 'SET_MESSAGES', payload: [] });
+    }, [state.currentRoom]);
+
     const value = {
         ...state,
         sendMessage,
         createRoom,
-        joinRoom: useCallback((roomId: string) => {
-            dispatch({ type: 'SET_CURRENT_ROOM', payload: roomId });
-        }, []),
-        leaveRoom: useCallback(() => {
-            dispatch({ type: 'SET_CURRENT_ROOM', payload: null });
-            dispatch({ type: 'SET_MESSAGES', payload: [] });
-        }, []),
+        joinRoom,
+        leaveRoom,
     };
 
     return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
