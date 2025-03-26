@@ -11,6 +11,7 @@ import { Button } from "@burnt-labs/ui";
 import "@burnt-labs/ui/dist/index.css";
 import type { ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { SignArb } from "../components/sign-arb.tsx";
+import ChatWindow from "../components/chat/ChatWindow";
 
 const seatContractAddress =
   "xion1z70cvc08qv5764zeg3dykcyymj5z6nu4sqr7x8vl4zjef2gyp69s9mmdka";
@@ -58,7 +59,6 @@ export default function Page(): JSX.Element {
     };
 
     try {
-      // Use "auto" fee for most transactions
       const claimRes = await client?.execute(
         account.bech32Address,
         seatContractAddress,
@@ -79,7 +79,6 @@ export default function Page(): JSX.Element {
 
       setExecuteResult(claimRes);
     } catch (error) {
-      // eslint-disable-next-line no-console -- No UI exists yet to display errors
       console.log(error);
     } finally {
       setLoading(false);
@@ -161,6 +160,11 @@ export default function Page(): JSX.Element {
           </div>
         </div>
       ) : null}
+
+      {/* Chat Window */}
+      {account?.bech32Address && (
+        <ChatWindow />
+      )}
     </main>
   );
 }

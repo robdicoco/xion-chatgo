@@ -6,8 +6,12 @@
         "name": "next"
       }
     ],
-    "moduleResolution": "Bundler",
-    "strictNullChecks": true
+    "moduleResolution": "node",
+    "strictNullChecks": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": [
     "next-env.d.ts",
