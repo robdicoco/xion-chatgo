@@ -2,7 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary-color: #4361ee;
+  --primary-light: #6c85ff;
+  --background: #f8fafc;
+  --text: #1a1a1a;
+}
+
 body {
-  color: white;
-  background: black;
+  color: var(--text);
+  background: var(--background);
+}
+
+/* Update button styles */
+.bg-blue-500 {
+  background-color: var(--primary-color) !important;
+}
+
+.hover\:bg-blue-600:hover {
+  background-color: var(--primary-light) !important;
+}
+
+.text-blue-500 {
+  color: var(--primary-color) !important;
+}
+
+.border-blue-500 {
+  border-color: var(--primary-color) !important;
 }

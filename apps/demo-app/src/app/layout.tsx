@@ -30,6 +30,7 @@ const legacyConfig = {
   // Optional params to activate mainnet config
   // rpcUrl: "https://rpc.xion-mainnet-1.burnt.com:443",
   // restUrl: "https://api.xion-mainnet-1.burnt.com:443",
+  appName: "ChatPay Go",
 };
 
 const treasuryConfig = {
@@ -38,6 +39,7 @@ const treasuryConfig = {
   // Optional params to activate mainnet config
   // rpcUrl: "https://rpc.xion-mainnet-1.burnt.com:443",
   // restUrl: "https://api.xion-mainnet-1.burnt.com:443",
+  appName: "ChatPay Go",
 };
 
 // Wrapper component to access user account
@@ -45,7 +47,7 @@ function ChatProviderWrapper({ children }: { children: React.ReactNode }) {
   const { data: account, isConnected } = useAbstraxionAccount();
   
   if (!isConnected || !account?.bech32Address) {
-    return children;
+    return <>{children}</>;
   }
 
   return (
